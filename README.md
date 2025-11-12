@@ -11,12 +11,12 @@ Have checked in with a TA before deadline
 
 ### Languages/Frameworks (30 points total)
 
-Frontend (10 points)
-10 pts - Learn and implement React for UI and routing<br>
+Frontend (10 points)<br>
+Learn and implement React for UI and routing<br>
 Backend (10 points)<br>
-10 pts - Learn and use Express.js (Node.js framework) to handle routes, authentication<br>
+Learn and use Express.js (Node.js framework) to handle routes, authentication<br>
 Database (10 points)<br>
-10 pts - Learn and use MongoDB
+Learn and use MongoDB
 
 ### Functionality (40 points total)
 10 pts - Users can register, log in, and log out<br>
