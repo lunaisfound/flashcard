@@ -22,8 +22,7 @@ Learn and use MongoDB
 10 pts - Users can register, log in, and log out<br>
 10 pts - Logged in users can create decks<br>
 10 pts - Logged in users can create, edit, and delete flashcards within a deck<br>
-10 pts - Implement spaced repetition study mode - cards appear based on recall scores
-
+10 pts - Cards appear randomly everytime the user open the deck
 
 ### Best Practices (5 points)
 03 pts - Code is readable and well formatted<br>
