@@ -41,8 +41,32 @@ export default function DeckPage() {
         const data = await res.json();
 
         const formatted = data.map((card) => ({
-          front: { html: <div>{card.frontText}</div> },
-          back: { html: <div>{card.backText}</div> },
+          front: {
+            html: <div>{card.frontText}</div>,
+            style: {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              textAlign: "center",
+              height: "100%",
+              width: "100%",
+              padding: "20px",
+              fontSize: "1.5rem",
+            },
+          },
+          back: {
+            html: <div>{card.backText}</div>,
+            style: {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              textAlign: "center",
+              height: "100%",
+              width: "100%",
+              padding: "20px",
+              fontSize: "1.5rem",
+            },
+          },
         }));
 
         setCards(formatted);
