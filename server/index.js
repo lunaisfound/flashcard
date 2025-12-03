@@ -119,6 +119,47 @@ app.get("/api/projects/:projectId/decks", async (req, res) => {
   }
 });
 
+// ----------------------------
+// DELETE PROJECT + its decks + its cards
+// ----------------------------
+app.delete("/api/projects/:projectId", async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!ObjectId.isValid(projectId)) {
+    return res.status(400).json({ error: "Invalid project ID." });
+  }
+
+  try {
+    // Delete the project itself
+    await db.collection("projects").deleteOne({ _id: new ObjectId(projectId) });
+
+    // Delete all decks in this project
+    const decks = await db
+      .collection("decks")
+      .find({ projectId: new ObjectId(projectId) })
+      .toArray();
+
+    const deckIds = decks.map((d) => d._id);
+
+    if (deckIds.length > 0) {
+      // delete cards belonging to those decks
+      await db.collection("cards").deleteMany({
+        deckId: { $in: deckIds.map((id) => new ObjectId(id)) },
+      });
+
+      // delete the decks
+      await db.collection("decks").deleteMany({
+        _id: { $in: deckIds.map((id) => new ObjectId(id)) },
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Failed to delete project:", err);
+    res.status(500).json({ error: "Failed to delete project." });
+  }
+});
+
 // ================================================================
 // DECK ROUTES
 // ================================================================

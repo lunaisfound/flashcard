@@ -7,7 +7,6 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
-  // Load projects
   useEffect(() => {
     fetch("/api/projects")
       .then((res) => res.json())
@@ -30,6 +29,24 @@ export default function Sidebar() {
     navigate(`/projects/${proj._id}`);
   }
 
+  // NEW — delete project
+  async function deleteProject(id) {
+    const ok = window.confirm("Delete this project?");
+    if (!ok) return;
+
+    const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert("Failed to delete project");
+      return;
+    }
+
+    // Remove it locally
+    setProjects((prev) => prev.filter((p) => p._id !== id));
+
+    // If you are inside the deleted project, go home
+    navigate("/");
+  }
+
   const width = collapsed ? "60px" : "260px";
 
   return (
@@ -48,7 +65,6 @@ export default function Sidebar() {
         transition: "width 0.2s ease",
       }}
     >
-      {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         style={{
@@ -64,10 +80,8 @@ export default function Sidebar() {
         {collapsed ? "→" : "←"}
       </button>
 
-      {/* Title */}
       {!collapsed && <h2>Projects</h2>}
 
-      {/* Add project */}
       {!collapsed && (
         <div style={{ marginBottom: "20px" }}>
           <input
@@ -102,23 +116,45 @@ export default function Sidebar() {
 
       {/* Project List */}
       {projects.map((p) => (
-        <Link
+        <div
           key={p._id}
-          to={`/projects/${p._id}`}
           style={{
-            display: "block",
-            padding: collapsed ? "10px 8px" : "10px",
-            borderRadius: "6px",
+            display: "flex",
+            alignItems: "center",
             background: "white",
             border: "1px solid #eee",
-            color: "#333",
-            textDecoration: "none",
+            borderRadius: "6px",
+            padding: "8px",
             marginBottom: "6px",
-            textAlign: collapsed ? "center" : "left",
           }}
         >
-          {collapsed ? "•" : p.title}
-        </Link>
+          <Link
+            to={`/projects/${p._id}`}
+            style={{
+              textDecoration: "none",
+              color: "#333",
+              flex: 1,
+              textAlign: collapsed ? "center" : "left",
+            }}
+          >
+            {collapsed ? "•" : p.title}
+          </Link>
+
+          {!collapsed && (
+            <button
+              onClick={() => deleteProject(p._id)}
+              style={{
+                color: "red",
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                marginLeft: "6px",
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       ))}
     </div>
   );

@@ -1,14 +1,38 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 
 export default function ProjectPage() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
+
   const [project, setProject] = useState(null);
   const [decks, setDecks] = useState([]);
   const [newDeckTitle, setNewDeckTitle] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Load project info
+  // -----------------------------
+  // DELETE PROJECT (fixed)
+  // -----------------------------
+  async function deleteProject() {
+    const ok = window.confirm("Delete this entire project?");
+    if (!ok) return;
+
+    const res = await fetch(`/api/projects/${projectId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      alert("Failed to delete project");
+      return;
+    }
+
+    // Go back home
+    navigate("/");
+  }
+
+  // -----------------------------
+  // Load project + decks
+  // -----------------------------
   useEffect(() => {
     async function loadProject() {
       try {
@@ -38,6 +62,9 @@ export default function ProjectPage() {
     loadDecks();
   }, [projectId]);
 
+  // -----------------------------
+  // Create Deck
+  // -----------------------------
   async function createDeck() {
     if (!newDeckTitle.trim()) return;
 
@@ -52,6 +79,7 @@ export default function ProjectPage() {
       });
 
       if (!res.ok) throw new Error("Failed to create deck");
+
       const deck = await res.json();
 
       setDecks((prev) => [...prev, deck]);
@@ -62,6 +90,9 @@ export default function ProjectPage() {
     }
   }
 
+  // -----------------------------
+  // Delete Deck
+  // -----------------------------
   async function deleteDeck(deckId) {
     const confirmed = window.confirm("Delete this deck?");
     if (!confirmed) return;
@@ -80,18 +111,33 @@ export default function ProjectPage() {
     }
   }
 
-  if (loading) {
-    return <p>Loading project...</p>;
-  }
-
-  if (!project) {
-    return <p>Project not found.</p>;
-  }
+  // -----------------------------
+  // Render
+  // -----------------------------
+  if (loading) return <p>Loading project...</p>;
+  if (!project) return <p>Project not found.</p>;
 
   return (
     <div>
       <h1>{project.title}</h1>
 
+      {/* DELETE PROJECT BUTTON */}
+      <button
+        onClick={deleteProject}
+        style={{
+          marginBottom: "20px",
+          background: "white",
+          border: "1px solid red",
+          color: "red",
+          borderRadius: "6px",
+          padding: "6px 12px",
+          cursor: "pointer",
+        }}
+      >
+        Delete Project
+      </button>
+
+      {/* Create Deck */}
       <div style={{ marginBottom: "20px" }}>
         <input
           value={newDeckTitle}
@@ -119,6 +165,7 @@ export default function ProjectPage() {
         </button>
       </div>
 
+      {/* List of Decks */}
       <div>
         {decks.map((deck) => (
           <div
