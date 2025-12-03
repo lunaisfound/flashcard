@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 export default function FlashDeck() {
   const [deck, setDeck] = useState([]);
   useEffect(() => {
-    fetch("http://localhost:5000/...")//im not sure about the location
+    fetch("http://localhost:5000/...") //im not sure about the location
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((card) => ({
@@ -18,7 +18,12 @@ export default function FlashDeck() {
 
   return (
     <div>
-      <FlashcardArray deck={deck} />
+      <h2>{deck.title}</h2>
+      {deck.length === 0 ? (
+        <p>No flashcards yet.</p>
+      ) : (
+        <FlashcardArray deck={deck} />
+      )}
     </div>
   );
 }
