@@ -5,20 +5,25 @@ import { useParams, Link } from "react-router-dom";
 
 export default function DeckPage() {
   const { deckId } = useParams();
-  const [deckCards, setDeckCards] = useState([]);
   const [deckTitle, setDeckTitle] = useState("");
+  const [deckCards, setDeckCards] = useState([]);
 
-  // Fetch deck title (from decks collection)
+  // ------------------------------
+  // Fetch deck title (from /api/decks)
+  // ------------------------------
   useEffect(() => {
     fetch("/api/decks")
       .then((res) => res.json())
-      .then((allDecks) => {
-        const deck = allDecks.find((d) => d._id === deckId);
+      .then((decks) => {
+        const deck = decks.find((d) => d._id === deckId);
         if (deck) setDeckTitle(deck.title);
-      });
+      })
+      .catch((err) => console.error("Failed to load deck title", err));
   }, [deckId]);
 
+  // ------------------------------
   // Fetch cards for this deck
+  // ------------------------------
   useEffect(() => {
     fetch(`/api/cards/${deckId}`)
       .then((res) => res.json())
@@ -28,23 +33,28 @@ export default function DeckPage() {
           back: { html: <div>{card.backText}</div> },
         }));
         setDeckCards(formatted);
-      });
+      })
+      .catch((err) => console.error("Failed to load deck cards", err));
   }, [deckId]);
 
   return (
     <div>
-      <h1>{deckTitle}</h1>
+      {/* Deck Title */}
+      <h1>{deckTitle || "Untitled Deck"}</h1>
 
+      {/* Card list / Flashcards */}
       {deckCards.length === 0 ? (
         <p>No cards yet.</p>
       ) : (
         <FlashcardArray deck={deckCards} />
       )}
 
-      <br />
-      <Link to={`/decks/${deckId}/edit`}>
-        <button>Edit Deck</button>
-      </Link>
+      {/* Edit Deck Button */}
+      <div style={{ marginTop: "20px" }}>
+        <Link to={`/decks/${deckId}/edit`}>
+          <button>Edit Deck</button>
+        </Link>
+      </div>
     </div>
   );
 }

@@ -69,6 +69,88 @@ app.post("/api/decks", async (req, res) => {
 });
 
 // ----------------------------
+// GET SINGLE DECK BY ID
+// ----------------------------
+app.get("/api/decks/:deckId", async (req, res) => {
+  const { deckId } = req.params;
+
+  if (!ObjectId.isValid(deckId)) {
+    return res.status(400).json({ error: "Invalid deck ID." });
+  }
+
+  try {
+    const deck = await db
+      .collection("decks")
+      .findOne({ _id: new ObjectId(deckId) });
+
+    if (!deck) {
+      return res.status(404).json({ error: "Deck not found." });
+    }
+
+    res.json(deck);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch deck." });
+  }
+});
+
+// ----------------------------
+// UPDATE DECK (TITLE + CARDS)
+// ----------------------------
+app.put("/api/decks/:deckId", async (req, res) => {
+  const { deckId } = req.params;
+  const { title, cards } = req.body;
+
+  if (!ObjectId.isValid(deckId)) {
+    return res.status(400).json({ error: "Invalid deck ID." });
+  }
+
+  if (!title || typeof title !== "string") {
+    return res.status(400).json({ error: "Deck title is required." });
+  }
+
+  if (!Array.isArray(cards)) {
+    return res.status(400).json({ error: "Cards must be an array." });
+  }
+
+  try {
+    const deckObjectId = new ObjectId(deckId);
+
+    // 1) Update deck title
+    await db
+      .collection("decks")
+      .updateOne({ _id: deckObjectId }, { $set: { title } });
+
+    // 2) Remove existing cards for this deck
+    await db.collection("cards").deleteMany({ deckId: deckObjectId });
+
+    // 3) Insert new cards
+    const docsToInsert = cards
+      .filter(
+        (c) =>
+          c.frontText &&
+          c.backText &&
+          c.frontText.trim() !== "" &&
+          c.backText.trim() !== ""
+      )
+      .map((c) => ({
+        deckId: deckObjectId,
+        frontText: c.frontText,
+        backText: c.backText,
+        createdAt: new Date(),
+      }));
+
+    if (docsToInsert.length > 0) {
+      await db.collection("cards").insertMany(docsToInsert);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error updating deck:", err);
+    res.status(500).json({ error: "Failed to update deck." });
+  }
+});
+
+// ----------------------------
 // GET ALL CARDS IN A DECK
 // ----------------------------
 app.get("/api/cards/:deckId", async (req, res) => {
