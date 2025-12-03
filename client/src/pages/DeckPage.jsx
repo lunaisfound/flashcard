@@ -3,6 +3,15 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { FlashcardArray } from "react-quizlet-flashcard";
 import "react-quizlet-flashcard/dist/index.css";
 
+function shuffleArray(arr) {
+  const array = [...arr];
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 export default function DeckPage() {
   const { deckId } = useParams();
   const navigate = useNavigate();
@@ -40,7 +49,7 @@ export default function DeckPage() {
         if (!res.ok) throw new Error("Failed to load deck cards");
         const data = await res.json();
 
-        const formatted = data.map((card) => ({
+        let formatted = data.map((card) => ({
           front: {
             html: <div>{card.frontText}</div>,
             style: {
@@ -68,7 +77,7 @@ export default function DeckPage() {
             },
           },
         }));
-
+        formatted = shuffleArray(formatted);
         setCards(formatted);
       } catch (err) {
         console.error(err);
