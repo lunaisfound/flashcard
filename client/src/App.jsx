@@ -5,7 +5,17 @@ function App() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar />
-      <div style={{ flex: 1, padding: "20px", background: "#fafafa" }}>
+
+      <div
+        id="main"
+        style={{
+          padding: "20px",
+          marginLeft: "260px", // default (will be overridden by CSS variable)
+          transition: "margin-left 0.2s ease",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
         <Outlet />
       </div>
     </div>

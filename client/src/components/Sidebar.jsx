@@ -4,11 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Sidebar() {
   const [projects, setProjects] = useState([]);
   const [newTitle, setNewTitle] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
-  // Load all projects
+  // Load projects
   useEffect(() => {
-    fetch("http://localhost:4000/api/projects")
+    fetch("/api/projects")
       .then((res) => res.json())
       .then((data) => setProjects(data))
       .catch((err) => console.error("Failed to load projects:", err));
@@ -17,92 +18,108 @@ export default function Sidebar() {
   async function createProject() {
     if (!newTitle.trim()) return;
 
-    try {
-      const res = await fetch("http://localhost:4000/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle }),
-      });
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
 
-      const proj = await res.json();
-      setProjects([...projects, proj]);
-      setNewTitle("");
-      navigate(`/projects/${proj._id}`);
-    } catch (err) {
-      console.error("Failed to create project:", err);
-    }
+    const proj = await res.json();
+    setProjects([...projects, proj]);
+    setNewTitle("");
+    navigate(`/projects/${proj._id}`);
   }
+
+  const width = collapsed ? "60px" : "260px";
 
   return (
     <div
       style={{
-        width: "260px",
+        width,
         height: "100vh",
         background: "#f7f5f3",
-        padding: "20px",
+        padding: "20px 10px",
         borderRight: "1px solid #ddd",
         boxSizing: "border-box",
         position: "fixed",
         left: 0,
         top: 0,
         overflowY: "auto",
+        transition: "width 0.2s ease",
       }}
     >
-      {/* Header */}
-      <h2 style={{ margin: "0 0 20px", fontWeight: "bold" }}>Projects</h2>
+      {/* Collapse toggle */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        style={{
+          marginBottom: "20px",
+          width: "100%",
+          padding: "8px",
+          border: "none",
+          background: "#eee",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        {collapsed ? "→" : "←"}
+      </button>
 
-      {/* Add Project */}
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="New project name"
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            marginBottom: "8px",
-          }}
-        />
-        <button
-          onClick={createProject}
-          style={{
-            width: "100%",
-            padding: "8px",
-            background: "#db4c3f",
-            border: "none",
-            borderRadius: "6px",
-            color: "white",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          + Add Project
-        </button>
-      </div>
+      {/* Title */}
+      {!collapsed && <h2>Projects</h2>}
 
-      {/* Project list */}
-      <div>
-        {projects.map((p) => (
-          <Link
-            key={p._id}
-            to={`/projects/${p._id}`}
+      {/* Add project */}
+      {!collapsed && (
+        <div style={{ marginBottom: "20px" }}>
+          <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="New project"
             style={{
-              display: "block",
-              padding: "10px 12px",
+              width: "100%",
+              padding: "8px",
+              border: "1px solid #ccc",
               borderRadius: "6px",
-              textDecoration: "none",
-              color: "#333",
-              marginBottom: "6px",
-              background: "#fff",
-              border: "1px solid #eee",
+              marginBottom: "8px",
+            }}
+          />
+
+          <button
+            onClick={createProject}
+            style={{
+              width: "100%",
+              padding: "8px",
+              background: "#db4c3f",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
             }}
           >
-            {p.title}
-          </Link>
-        ))}
-      </div>
+            + Add Project
+          </button>
+        </div>
+      )}
+
+      {/* Project List */}
+      {projects.map((p) => (
+        <Link
+          key={p._id}
+          to={`/projects/${p._id}`}
+          style={{
+            display: "block",
+            padding: collapsed ? "10px 8px" : "10px",
+            borderRadius: "6px",
+            background: "white",
+            border: "1px solid #eee",
+            color: "#333",
+            textDecoration: "none",
+            marginBottom: "6px",
+            textAlign: collapsed ? "center" : "left",
+          }}
+        >
+          {collapsed ? "•" : p.title}
+        </Link>
+      ))}
     </div>
   );
 }
