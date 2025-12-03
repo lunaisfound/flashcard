@@ -32,7 +32,99 @@ app.get("/", (req, res) => {
 });
 
 // ----------------------------
-// GET ALL DECKS
+// GET ALL PROJECTS
+// ----------------------------
+app.get("/api/projects", async (req, res) => {
+  try {
+    const projects = await db.collection("projects").find().toArray();
+    res.json(projects);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch projects." });
+  }
+});
+
+// ----------------------------
+// CREATE NEW PROJECT
+// ----------------------------
+app.post("/api/projects", async (req, res) => {
+  const { title } = req.body;
+
+  if (!title || typeof title !== "string") {
+    return res.status(400).json({ error: "Project title is required." });
+  }
+
+  try {
+    const result = await db.collection("projects").insertOne({
+      title,
+      createdAt: new Date(),
+    });
+
+    res.json({
+      _id: result.insertedId,
+      title,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create project." });
+  }
+});
+
+// ----------------------------
+// GET ONE PROJECT BY ID
+// ----------------------------
+app.get("/api/projects/:projectId", async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!ObjectId.isValid(projectId)) {
+    return res.status(400).json({ error: "Invalid project ID." });
+  }
+
+  try {
+    const project = await db
+      .collection("projects")
+      .findOne({ _id: new ObjectId(projectId) });
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    res.json(project);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch project." });
+  }
+});
+
+// ----------------------------
+// GET ALL DECKS IN A PROJECT
+// ----------------------------
+app.get("/api/projects/:projectId/decks", async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!ObjectId.isValid(projectId)) {
+    return res.status(400).json({ error: "Invalid project ID." });
+  }
+
+  try {
+    const decks = await db
+      .collection("decks")
+      .find({ projectId: new ObjectId(projectId) })
+      .toArray();
+
+    res.json(decks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch decks for project." });
+  }
+});
+
+// ================================================================
+// DECK ROUTES
+// ================================================================
+
+// ----------------------------
+// GET ALL DECKS (GLOBAL)
 // ----------------------------
 app.get("/api/decks", async (req, res) => {
   try {
@@ -44,26 +136,33 @@ app.get("/api/decks", async (req, res) => {
 });
 
 // ----------------------------
-// CREATE NEW DECK
+// CREATE NEW DECK (UPDATED FOR PROJECT)
 // ----------------------------
 app.post("/api/decks", async (req, res) => {
-  const { title } = req.body;
+  const { title, projectId } = req.body;
 
   if (!title || typeof title !== "string") {
     return res.status(400).json({ error: "Deck title is required." });
   }
 
+  if (!projectId || !ObjectId.isValid(projectId)) {
+    return res.status(400).json({ error: "Valid projectId is required." });
+  }
+
   try {
     const result = await db.collection("decks").insertOne({
       title,
+      projectId: new ObjectId(projectId),
       createdAt: new Date(),
     });
 
     res.json({
       _id: result.insertedId,
       title,
+      projectId,
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to create deck." });
   }
 });
@@ -151,6 +250,32 @@ app.put("/api/decks/:deckId", async (req, res) => {
 });
 
 // ----------------------------
+// DELETE DECK
+// ----------------------------
+app.delete("/api/decks/:deckId", async (req, res) => {
+  const { deckId } = req.params;
+
+  if (!ObjectId.isValid(deckId)) {
+    return res.status(400).json({ error: "Invalid deck ID." });
+  }
+
+  try {
+    await db.collection("decks").deleteOne({ _id: new ObjectId(deckId) });
+
+    // Also delete its cards
+    await db.collection("cards").deleteMany({ deckId: new ObjectId(deckId) });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete deck." });
+  }
+});
+
+// ================================================================
+// CARD ROUTES
+// ================================================================
+
+// ----------------------------
 // GET ALL CARDS IN A DECK
 // ----------------------------
 app.get("/api/cards/:deckId", async (req, res) => {
@@ -205,30 +330,5 @@ app.post("/api/cards", async (req, res) => {
   }
 });
 
-// ----------------------------
-// DELETE DECK
-// ----------------------------
-app.delete("/api/decks/:deckId", async (req, res) => {
-  const { deckId } = req.params;
-
-  if (!ObjectId.isValid(deckId)) {
-    return res.status(400).json({ error: "Invalid deck ID." });
-  }
-
-  try {
-    await db.collection("decks").deleteOne({ _id: new ObjectId(deckId) });
-
-    // Also delete its cards
-    await db.collection("cards").deleteMany({ deckId: new ObjectId(deckId) });
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to delete deck." });
-  }
-});
-
-// ----------------------------
-// START SERVER
-// ----------------------------
 const PORT = 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

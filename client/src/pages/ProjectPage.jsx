@@ -1,63 +1,67 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 export default function ProjectPage() {
-  const [deckList, setDeckList] = useState([]);
-
+  const { projectId } = useParams();
+  const [project, setProject] = useState(null);
+  const [decks, setDecks] = useState([]);
   const [newDeckTitle, setNewDeckTitle] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // -----------------------
-  // Fetch all decks
-  // -----------------------
+  // Load project info
   useEffect(() => {
-    fetch("/api/decks")
-      .then((res) => res.json())
-      .then((data) => setDeckList(data))
-      .catch((err) => console.error("Failed to fetch decks", err));
-  }, []);
+    async function loadProject() {
+      try {
+        const res = await fetch(`/api/projects/${projectId}`);
+        if (!res.ok) throw new Error("Failed to load project");
+        const data = await res.json();
+        setProject(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
-  // -----------------------
-  // Create Deck UI handler
-  // -----------------------
-  function startCreatingDeck() {
-    setIsCreating(true);
-  }
+    async function loadDecks() {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/decks`);
+        if (!res.ok) throw new Error("Failed to load decks");
+        const data = await res.json();
+        setDecks(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  // -----------------------
-  // Submit new deck to backend
-  // -----------------------
-  async function submitNewDeck() {
+    loadProject();
+    loadDecks();
+  }, [projectId]);
+
+  async function createDeck() {
     if (!newDeckTitle.trim()) return;
 
     try {
       const res = await fetch("/api/decks", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title: newDeckTitle.trim() }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newDeckTitle.trim(),
+          projectId,
+        }),
       });
 
       if (!res.ok) throw new Error("Failed to create deck");
+      const deck = await res.json();
 
-      const createdDeck = await res.json(); // returns {_id, title}
-
-      // Update UI
-      setDeckList((prev) => [...prev, createdDeck]);
-
-      // Reset form
+      setDecks((prev) => [...prev, deck]);
       setNewDeckTitle("");
-      setIsCreating(false);
     } catch (err) {
-      console.error("Error creating deck:", err);
-      alert("Server error. Deck not created.");
+      console.error("Failed to create deck:", err);
+      alert("Error creating deck.");
     }
   }
 
-  // -----------------------
-  // Delete Deck
-  // -----------------------
   async function deleteDeck(deckId) {
     const confirmed = window.confirm("Delete this deck?");
     if (!confirmed) return;
@@ -69,56 +73,91 @@ export default function ProjectPage() {
 
       if (!res.ok) throw new Error("Failed to delete deck");
 
-      // Update frontend state
-      setDeckList((prev) => prev.filter((deck) => deck._id !== deckId));
+      setDecks((prev) => prev.filter((d) => d._id !== deckId));
     } catch (err) {
-      console.error("Error deleting deck:", err);
+      console.error("Failed to delete deck:", err);
       alert("Error deleting deck.");
     }
   }
 
+  if (loading) {
+    return <p>Loading project...</p>;
+  }
+
+  if (!project) {
+    return <p>Project not found.</p>;
+  }
+
   return (
     <div>
-      <h1>Decks</h1>
+      <h1>{project.title}</h1>
 
-      <ul>
-        {deckList.map((deck) => (
-          <li key={deck._id} style={{ marginBottom: "8px" }}>
-            <Link to={`/decks/${deck._id}`}>{deck.title}</Link>
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          value={newDeckTitle}
+          onChange={(e) => setNewDeckTitle(e.target.value)}
+          placeholder="New deck title"
+          style={{
+            padding: "8px",
+            marginRight: "10px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+          }}
+        />
+        <button
+          onClick={createDeck}
+          style={{
+            padding: "8px 14px",
+            background: "#0077ff",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          + Add Deck
+        </button>
+      </div>
 
-            {/* DELETE BUTTON */}
+      <div>
+        {decks.map((deck) => (
+          <div
+            key={deck._id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "12px",
+              borderRadius: "6px",
+              background: "#fff",
+              border: "1px solid #ddd",
+              marginBottom: "10px",
+            }}
+          >
+            <Link
+              to={`/decks/${deck._id}`}
+              style={{ textDecoration: "none", color: "#333", flex: 1 }}
+            >
+              {deck.title}
+            </Link>
+
             <button
+              onClick={() => deleteDeck(deck._id)}
               style={{
                 marginLeft: "10px",
                 color: "red",
                 border: "1px solid red",
                 background: "white",
+                borderRadius: "4px",
+                padding: "4px 8px",
                 cursor: "pointer",
               }}
-              onClick={() => deleteDeck(deck._id)}
             >
               Delete
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
-
-      {/* Add Deck Button */}
-      <button onClick={startCreatingDeck}>+ Add Deck</button>
-
-      {/* Deck Creation Form */}
-      {isCreating && (
-        <div style={{ marginTop: "10px" }}>
-          <input
-            type="text"
-            placeholder="Deck title"
-            value={newDeckTitle}
-            onChange={(e) => setNewDeckTitle(e.target.value)}
-          />
-          <button onClick={submitNewDeck}>Create</button>
-          <button onClick={() => setIsCreating(false)}>Cancel</button>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
