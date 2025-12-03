@@ -1,12 +1,24 @@
 import { FlashcardArray } from "react-quizlet-flashcard";
 import "react-quizlet-flashcard/dist/index.css";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 export default function DeckPage() {
   const { deckId } = useParams();
-  const [deck, setDeck] = useState([]);
+  const [deckCards, setDeckCards] = useState([]);
+  const [deckTitle, setDeckTitle] = useState("");
 
+  // Fetch deck title (from decks collection)
+  useEffect(() => {
+    fetch("/api/decks")
+      .then((res) => res.json())
+      .then((allDecks) => {
+        const deck = allDecks.find((d) => d._id === deckId);
+        if (deck) setDeckTitle(deck.title);
+      });
+  }, [deckId]);
+
+  // Fetch cards for this deck
   useEffect(() => {
     fetch(`/api/cards/${deckId}`)
       .then((res) => res.json())
@@ -15,13 +27,24 @@ export default function DeckPage() {
           front: { html: <div>{card.frontText}</div> },
           back: { html: <div>{card.backText}</div> },
         }));
-        setDeck(formatted);
+        setDeckCards(formatted);
       });
   }, [deckId]);
 
   return (
     <div>
-      <FlashcardArray deck={deck} />
+      <h1>{deckTitle}</h1>
+
+      {deckCards.length === 0 ? (
+        <p>No cards yet.</p>
+      ) : (
+        <FlashcardArray deck={deckCards} />
+      )}
+
+      <br />
+      <Link to={`/decks/${deckId}/edit`}>
+        <button>Edit Deck</button>
+      </Link>
     </div>
   );
 }

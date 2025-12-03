@@ -124,6 +124,28 @@ app.post("/api/cards", async (req, res) => {
 });
 
 // ----------------------------
+// DELETE DECK
+// ----------------------------
+app.delete("/api/decks/:deckId", async (req, res) => {
+  const { deckId } = req.params;
+
+  if (!ObjectId.isValid(deckId)) {
+    return res.status(400).json({ error: "Invalid deck ID." });
+  }
+
+  try {
+    await db.collection("decks").deleteOne({ _id: new ObjectId(deckId) });
+
+    // Also delete its cards
+    await db.collection("cards").deleteMany({ deckId: new ObjectId(deckId) });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete deck." });
+  }
+});
+
+// ----------------------------
 // START SERVER
 // ----------------------------
 const PORT = 4000;
