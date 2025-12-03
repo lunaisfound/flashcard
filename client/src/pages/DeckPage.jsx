@@ -20,9 +20,7 @@ export default function DeckPage() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // -----------------------------------
   // Fetch deck info (title + projectId)
-  // -----------------------------------
   useEffect(() => {
     async function loadDeck() {
       try {
@@ -39,9 +37,9 @@ export default function DeckPage() {
     loadDeck();
   }, [deckId]);
 
-  // -----------------------------------
+
   // Fetch cards
-  // -----------------------------------
+
   useEffect(() => {
     async function loadCards() {
       try {
@@ -90,9 +88,9 @@ export default function DeckPage() {
     loadCards();
   }, [deckId]);
 
-  // -----------------------------------
+
   // Delete Deck
-  // -----------------------------------
+
   async function handleDelete() {
     if (!window.confirm("Delete this deck?")) return;
 
@@ -111,9 +109,9 @@ export default function DeckPage() {
     }
   }
 
-  // -----------------------------------
+
   // Render
-  // -----------------------------------
+
   if (loading) return <p>Loading...</p>;
   if (!deck) return <p>Deck not found.</p>;
 

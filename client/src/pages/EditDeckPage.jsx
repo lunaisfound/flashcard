@@ -20,9 +20,9 @@ export default function EditDeckPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // -----------------------------
+
   // Load deck title and cards
-  // -----------------------------
+
   useEffect(() => {
     async function loadDeckAndCards() {
       try {
@@ -55,9 +55,9 @@ export default function EditDeckPage() {
     loadDeckAndCards();
   }, [deckId]);
 
-  // -----------------------------
+
   // Handlers for editing
-  // -----------------------------
+
   function updateCardText(id, field, value) {
     setCards((prev) =>
       prev.map((card) => (card.id === id ? { ...card, [field]: value } : card))
@@ -72,9 +72,9 @@ export default function EditDeckPage() {
     setCards((prev) => prev.filter((card) => card.id !== id));
   }
 
-  // -----------------------------
+
   // Save handler (PUT /api/decks/:deckId)
-  // -----------------------------
+
   async function handleSave(e) {
     e.preventDefault();
 
@@ -113,9 +113,9 @@ export default function EditDeckPage() {
     }
   }
 
-  // -----------------------------
+
   // Render
-  // -----------------------------
+
   if (loading) {
     return <p>Loading deck...</p>;
   }

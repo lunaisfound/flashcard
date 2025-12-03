@@ -1,4 +1,3 @@
-// client/src/Form.jsx
 export default function Form({
   front,
   back,

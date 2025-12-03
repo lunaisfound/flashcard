@@ -10,9 +10,6 @@ export default function ProjectPage() {
   const [newDeckTitle, setNewDeckTitle] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // -----------------------------
-  // DELETE PROJECT (fixed)
-  // -----------------------------
   async function deleteProject() {
     const ok = window.confirm("Delete this entire project?");
     if (!ok) return;
@@ -30,9 +27,8 @@ export default function ProjectPage() {
     navigate("/");
   }
 
-  // -----------------------------
   // Load project + decks
-  // -----------------------------
+
   useEffect(() => {
     async function loadProject() {
       try {
@@ -62,9 +58,8 @@ export default function ProjectPage() {
     loadDecks();
   }, [projectId]);
 
-  // -----------------------------
   // Create Deck
-  // -----------------------------
+
   async function createDeck() {
     if (!newDeckTitle.trim()) return;
 
@@ -90,9 +85,8 @@ export default function ProjectPage() {
     }
   }
 
-  // -----------------------------
   // Delete Deck
-  // -----------------------------
+
   async function deleteDeck(deckId) {
     const confirmed = window.confirm("Delete this deck?");
     if (!confirmed) return;
@@ -111,9 +105,8 @@ export default function ProjectPage() {
     }
   }
 
-  // -----------------------------
   // Render
-  // -----------------------------
+
   if (loading) return <p>Loading project...</p>;
   if (!project) return <p>Project not found.</p>;
 
@@ -121,7 +114,7 @@ export default function ProjectPage() {
     <div>
       <h1>{project.title}</h1>
 
-      {/* DELETE PROJECT BUTTON */}
+      {/* Delete project button */}
       <button
         onClick={deleteProject}
         style={{

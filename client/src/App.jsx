@@ -10,7 +10,7 @@ function App() {
         id="main"
         style={{
           padding: "20px",
-          marginLeft: "260px", // default (will be overridden by CSS variable)
+          marginLeft: "260px",
           transition: "margin-left 0.2s ease",
           width: "100%",
           boxSizing: "border-box",

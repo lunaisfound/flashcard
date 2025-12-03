@@ -1,4 +1,3 @@
-// client/src/EditorList.jsx
 export default function EditorList({ title, deck, startEditing }) {
   return (
     <div>

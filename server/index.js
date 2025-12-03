@@ -24,16 +24,13 @@ async function connectDB() {
 }
 connectDB();
 
-// ----------------------------
 // SIMPLE TEST ROUTE
-// ----------------------------
 app.get("/", (req, res) => {
   res.send("Server is running.");
 });
 
-// ----------------------------
 // GET ALL PROJECTS
-// ----------------------------
+
 app.get("/api/projects", async (req, res) => {
   try {
     const projects = await db.collection("projects").find().toArray();
@@ -44,9 +41,8 @@ app.get("/api/projects", async (req, res) => {
   }
 });
 
-// ----------------------------
 // CREATE NEW PROJECT
-// ----------------------------
+
 app.post("/api/projects", async (req, res) => {
   const { title } = req.body;
 
@@ -70,9 +66,8 @@ app.post("/api/projects", async (req, res) => {
   }
 });
 
-// ----------------------------
 // GET ONE PROJECT BY ID
-// ----------------------------
+
 app.get("/api/projects/:projectId", async (req, res) => {
   const { projectId } = req.params;
 
@@ -96,9 +91,8 @@ app.get("/api/projects/:projectId", async (req, res) => {
   }
 });
 
-// ----------------------------
 // GET ALL DECKS IN A PROJECT
-// ----------------------------
+
 app.get("/api/projects/:projectId/decks", async (req, res) => {
   const { projectId } = req.params;
 
@@ -119,9 +113,8 @@ app.get("/api/projects/:projectId/decks", async (req, res) => {
   }
 });
 
-// ----------------------------
 // DELETE PROJECT + its decks + its cards
-// ----------------------------
+
 app.delete("/api/projects/:projectId", async (req, res) => {
   const { projectId } = req.params;
 
@@ -160,13 +153,8 @@ app.delete("/api/projects/:projectId", async (req, res) => {
   }
 });
 
-// ================================================================
-// DECK ROUTES
-// ================================================================
-
-// ----------------------------
 // GET ALL DECKS (GLOBAL)
-// ----------------------------
+
 app.get("/api/decks", async (req, res) => {
   try {
     const decks = await db.collection("decks").find().toArray();
@@ -176,9 +164,8 @@ app.get("/api/decks", async (req, res) => {
   }
 });
 
-// ----------------------------
-// CREATE NEW DECK (UPDATED FOR PROJECT)
-// ----------------------------
+// CREATE NEW DECK
+
 app.post("/api/decks", async (req, res) => {
   const { title, projectId } = req.body;
 
@@ -208,9 +195,8 @@ app.post("/api/decks", async (req, res) => {
   }
 });
 
-// ----------------------------
 // GET SINGLE DECK BY ID
-// ----------------------------
+
 app.get("/api/decks/:deckId", async (req, res) => {
   const { deckId } = req.params;
 
@@ -233,9 +219,8 @@ app.get("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-// ----------------------------
 // UPDATE DECK (TITLE + CARDS)
-// ----------------------------
+
 app.put("/api/decks/:deckId", async (req, res) => {
   const { deckId } = req.params;
   const { title, cards } = req.body;
@@ -290,9 +275,8 @@ app.put("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-// ----------------------------
 // DELETE DECK
-// ----------------------------
+
 app.delete("/api/decks/:deckId", async (req, res) => {
   const { deckId } = req.params;
 
@@ -312,13 +296,8 @@ app.delete("/api/decks/:deckId", async (req, res) => {
   }
 });
 
-// ================================================================
-// CARD ROUTES
-// ================================================================
-
-// ----------------------------
 // GET ALL CARDS IN A DECK
-// ----------------------------
+
 app.get("/api/cards/:deckId", async (req, res) => {
   const { deckId } = req.params;
 
@@ -338,9 +317,8 @@ app.get("/api/cards/:deckId", async (req, res) => {
   }
 });
 
-// ----------------------------
 // CREATE NEW CARD
-// ----------------------------
+
 app.post("/api/cards", async (req, res) => {
   const { deckId, frontText, backText } = req.body;
 
