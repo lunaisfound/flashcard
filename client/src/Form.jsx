@@ -1,3 +1,4 @@
+// client/src/Form.jsx
 export default function Form({
   front,
   back,
@@ -27,8 +28,7 @@ export default function Form({
       <br />
 
       <button type="submit">
-        {editing ? "Save Changes" : "Add Flashcard"}{" "}
-        {/* I don't know how this submission can be reflected in the database */}
+        {editing ? "Save Changes" : "Add Flashcard"}
       </button>
     </form>
   );
