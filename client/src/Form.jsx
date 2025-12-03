@@ -27,7 +27,8 @@ export default function Form({
       <br />
 
       <button type="submit">
-        {editing ? "Save Changes" : "Add Flashcard"}
+        {editing ? "Save Changes" : "Add Flashcard"}{" "}
+        {/* I don't know how this submission can be reflected in the database */}
       </button>
     </form>
   );

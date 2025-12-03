@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 export default function FlashDeck() {
   const [deck, setDeck] = useState([]);
   useEffect(() => {
-    fetch("http://localhost:5000/...") //im not sure about the location
+    fetch("http://localhost:5000/...") //im not sure about where or what to fetch
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((card) => ({
