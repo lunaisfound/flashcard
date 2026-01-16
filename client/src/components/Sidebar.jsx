@@ -29,7 +29,7 @@ export default function Sidebar() {
     navigate(`/projects/${proj._id}`);
   }
 
-  // NEW — delete project
+  // delete project
   async function deleteProject(id) {
     const ok = window.confirm("Delete this project?");
     if (!ok) return;
