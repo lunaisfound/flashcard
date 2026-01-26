@@ -2,6 +2,15 @@ This app was created because there are too many class materials that I need to r
 
 Current progress: I’m working on making the card-creation process even smoother by adding AI.
 
+## Teck Stack
+
+This app uses MERN stack:
+
+- React (frontend library)
+- MongoDB (NoSQL database)
+- Express.js (backend framework)
+- Node.js (runtime environment).
+
 ## How to Run This App Locally
 
 ```bash
