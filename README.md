@@ -7,6 +7,7 @@ Current progress: I’m working on making the card-creation process even smoothe
 This app uses MERN stack:
 
 - React (frontend library)
+- Passport.js LocalStrategy (authentication)
 - MongoDB (NoSQL database)
 - Express.js (backend framework)
 - Node.js (runtime environment).
