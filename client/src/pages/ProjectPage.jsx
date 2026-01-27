@@ -16,6 +16,7 @@ export default function ProjectPage() {
 
     const res = await fetch(`/api/projects/${projectId}`, {
       method: "DELETE",
+      credentials: "include",
     });
 
     if (!res.ok) {
@@ -32,7 +33,9 @@ export default function ProjectPage() {
   useEffect(() => {
     async function loadProject() {
       try {
-        const res = await fetch(`/api/projects/${projectId}`);
+        const res = await fetch(`/api/projects/${projectId}`, {
+          credentials: "include",
+        });
         if (!res.ok) throw new Error("Failed to load project");
         const data = await res.json();
         setProject(data);
@@ -43,9 +46,17 @@ export default function ProjectPage() {
 
     async function loadDecks() {
       try {
-        const res = await fetch(`/api/projects/${projectId}/decks`);
+        const res = await fetch(`/api/projects/${projectId}/decks`, {
+          credentials: "include",
+        });
         if (!res.ok) throw new Error("Failed to load decks");
         const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          console.warn("Expected array of decks but got:", data);
+          throw new Error("Invalid response format");
+        }
+
         setDecks(data);
       } catch (err) {
         console.error(err);
@@ -67,6 +78,7 @@ export default function ProjectPage() {
       const res = await fetch("/api/decks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           title: newDeckTitle.trim(),
           projectId,
@@ -94,6 +106,7 @@ export default function ProjectPage() {
     try {
       const res = await fetch(`/api/decks/${deckId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to delete deck");
@@ -160,43 +173,44 @@ export default function ProjectPage() {
 
       {/* List of Decks */}
       <div>
-        {decks.map((deck) => (
-          <div
-            key={deck._id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px",
-              borderRadius: "6px",
-              background: "#fff",
-              border: "1px solid #ddd",
-              marginBottom: "10px",
-            }}
-          >
-            <Link
-              to={`/decks/${deck._id}`}
-              style={{ textDecoration: "none", color: "#333", flex: 1 }}
-            >
-              {deck.title}
-            </Link>
-
-            <button
-              onClick={() => deleteDeck(deck._id)}
+        {Array.isArray(decks) &&
+          decks.map((deck) => (
+            <div
+              key={deck._id}
               style={{
-                marginLeft: "10px",
-                color: "red",
-                border: "1px solid red",
-                background: "white",
-                borderRadius: "4px",
-                padding: "4px 8px",
-                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "12px",
+                borderRadius: "6px",
+                background: "#fff",
+                border: "1px solid #ddd",
+                marginBottom: "10px",
               }}
             >
-              Delete
-            </button>
-          </div>
-        ))}
+              <Link
+                to={`/app/decks/${deck._id}`}
+                style={{ textDecoration: "none", color: "#333", flex: 1 }}
+              >
+                {deck.title}
+              </Link>
+
+              <button
+                onClick={() => deleteDeck(deck._id)}
+                style={{
+                  marginLeft: "10px",
+                  color: "red",
+                  border: "1px solid red",
+                  background: "white",
+                  borderRadius: "4px",
+                  padding: "4px 8px",
+                  cursor: "pointer",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
       </div>
     </div>
   );

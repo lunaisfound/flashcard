@@ -24,7 +24,9 @@ export default function DeckPage() {
   useEffect(() => {
     async function loadDeck() {
       try {
-        const res = await fetch(`/api/decks/${deckId}`);
+        const res = await fetch(`/api/decks/${deckId}`, {
+          credentials: "include",
+        });
         if (!res.ok) throw new Error("Failed to load deck");
         const data = await res.json();
         setDeck(data);
@@ -37,15 +39,21 @@ export default function DeckPage() {
     loadDeck();
   }, [deckId]);
 
-
   // Fetch cards
 
   useEffect(() => {
     async function loadCards() {
       try {
-        const res = await fetch(`/api/cards/${deckId}`);
+        const res = await fetch(`/api/cards/${deckId}`, {
+          credentials: "include",
+        });
         if (!res.ok) throw new Error("Failed to load deck cards");
         const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          console.warn("Expected array, got:", data);
+          throw new Error("Invalid response format");
+        }
 
         let formatted = data.map((card) => ({
           front: {
@@ -88,7 +96,6 @@ export default function DeckPage() {
     loadCards();
   }, [deckId]);
 
-
   // Delete Deck
 
   async function handleDelete() {
@@ -97,18 +104,18 @@ export default function DeckPage() {
     try {
       const res = await fetch(`/api/decks/${deckId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to delete deck");
 
       // Go back to the project page
-      navigate(`/projects/${deck.projectId}`);
+      navigate(`/app/projects/${deck.projectId}`);
     } catch (err) {
       console.error(err);
       alert("Error deleting deck.");
     }
   }
-
 
   // Render
 
@@ -129,7 +136,7 @@ export default function DeckPage() {
 
       {/* Buttons */}
       <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-        <Link to={`/decks/${deckId}/edit`}>
+        <Link to={`/app/decks/${deckId}/edit`}>
           <button
             style={{
               padding: "8px 14px",

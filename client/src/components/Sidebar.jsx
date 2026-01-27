@@ -8,7 +8,9 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("/api/projects")
+    fetch("/api/projects", {
+      credentials: "include",
+    })
       .then((res) => res.json())
       .then((data) => setProjects(data))
       .catch((err) => console.error("Failed to load projects:", err));
@@ -20,13 +22,14 @@ export default function Sidebar() {
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ title: newTitle }),
     });
 
     const proj = await res.json();
     setProjects([...projects, proj]);
     setNewTitle("");
-    navigate(`/projects/${proj._id}`);
+    navigate(`/app/projects/${proj._id}`);
   }
 
   // delete project
@@ -34,7 +37,10 @@ export default function Sidebar() {
     const ok = window.confirm("Delete this project?");
     if (!ok) return;
 
-    const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/projects/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     if (!res.ok) {
       alert("Failed to delete project");
       return;
@@ -115,47 +121,48 @@ export default function Sidebar() {
       )}
 
       {/* Project List */}
-      {projects.map((p) => (
-        <div
-          key={p._id}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            background: "white",
-            border: "1px solid #eee",
-            borderRadius: "6px",
-            padding: "8px",
-            marginBottom: "6px",
-          }}
-        >
-          <Link
-            to={`/projects/${p._id}`}
+      {Array.isArray(projects) &&
+        projects.map((p) => (
+          <div
+            key={p._id}
             style={{
-              textDecoration: "none",
-              color: "#333",
-              flex: 1,
-              textAlign: collapsed ? "center" : "left",
+              display: "flex",
+              alignItems: "center",
+              background: "white",
+              border: "1px solid #eee",
+              borderRadius: "6px",
+              padding: "8px",
+              marginBottom: "6px",
             }}
           >
-            {collapsed ? "•" : p.title}
-          </Link>
-
-          {!collapsed && (
-            <button
-              onClick={() => deleteProject(p._id)}
+            <Link
+              to={`/app/projects/${p._id}`}
               style={{
-                color: "red",
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                marginLeft: "6px",
+                textDecoration: "none",
+                color: "#333",
+                flex: 1,
+                textAlign: collapsed ? "center" : "left",
               }}
             >
-              ✕
-            </button>
-          )}
-        </div>
-      ))}
+              {collapsed ? "•" : p.title}
+            </Link>
+
+            {!collapsed && (
+              <button
+                onClick={() => deleteProject(p._id)}
+                style={{
+                  color: "red",
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  marginLeft: "6px",
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
     </div>
   );
 }

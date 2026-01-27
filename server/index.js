@@ -1,3 +1,8 @@
+const session = require("express-session");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require("bcrypt");
+
 require("dotenv").config();
 const uri = process.env.MONGO_URI;
 
@@ -6,8 +11,23 @@ const cors = require("cors");
 const { MongoClient, ObjectId } = require("mongodb");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true, // allow cookies to be sent
+  }),
+);
 app.use(express.json());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Connect to MongoDB
 const client = new MongoClient(uri);
@@ -24,16 +44,112 @@ async function connectDB() {
 }
 connectDB();
 
+passport.use(
+  new LocalStrategy(
+    { usernameField: "email" },
+    async (email, password, done) => {
+      try {
+        const user = await db.collection("users").findOne({ email });
+
+        if (!user) {
+          return done(null, false, { message: "Incorrect email" });
+        }
+
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+          return done(null, false, { message: "Incorrect password" });
+        }
+
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
+    },
+  ),
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user._id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(id) });
+    done(null, user); // This becomes req.user
+  } catch (err) {
+    done(err);
+  }
+});
+
 // SIMPLE TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Server is running.");
 });
 
+function ensureAuth(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.status(401).json({ error: "Unauthorized" });
+}
+
+// LOGIN
+app.post("/api/login", passport.authenticate("local"), (req, res) => {
+  res.json({
+    success: true,
+    message: "Logged in successfully",
+    user: {
+      _id: req.user._id,
+      email: req.user.email,
+    },
+  });
+});
+
+// REGISTER
+app.post("/api/register", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password required" });
+  }
+
+  try {
+    // Check if user already exists
+    const existing = await db.collection("users").findOne({ email });
+
+    if (existing) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user
+    const result = await db.collection("users").insertOne({
+      email,
+      password: hashedPassword,
+      createdAt: new Date(),
+    });
+
+    res.json({
+      success: true,
+      userId: result.insertedId,
+      email,
+    });
+  } catch (err) {
+    console.error("Register error:", err);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
 // GET ALL PROJECTS
 
-app.get("/api/projects", async (req, res) => {
+app.get("/api/projects", ensureAuth, async (req, res) => {
   try {
-    const projects = await db.collection("projects").find().toArray();
+    const projects = await db
+      .collection("projects")
+      .find({ userId: req.user._id })
+      .toArray();
     res.json(projects);
   } catch (err) {
     console.error(err);
@@ -43,7 +159,7 @@ app.get("/api/projects", async (req, res) => {
 
 // CREATE NEW PROJECT
 
-app.post("/api/projects", async (req, res) => {
+app.post("/api/projects", ensureAuth, async (req, res) => {
   const { title } = req.body;
 
   if (!title || typeof title !== "string") {
@@ -54,6 +170,7 @@ app.post("/api/projects", async (req, res) => {
     const result = await db.collection("projects").insertOne({
       title,
       createdAt: new Date(),
+      userId: req.user._id,
     });
 
     res.json({
@@ -61,14 +178,13 @@ app.post("/api/projects", async (req, res) => {
       title,
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Failed to create project." });
   }
 });
 
 // GET ONE PROJECT BY ID
 
-app.get("/api/projects/:projectId", async (req, res) => {
+app.get("/api/projects/:projectId", ensureAuth, async (req, res) => {
   const { projectId } = req.params;
 
   if (!ObjectId.isValid(projectId)) {
@@ -78,7 +194,7 @@ app.get("/api/projects/:projectId", async (req, res) => {
   try {
     const project = await db
       .collection("projects")
-      .findOne({ _id: new ObjectId(projectId) });
+      .findOne({ _id: new ObjectId(projectId), userId: req.user._id }); // covert str projectId into an ObjectId type
 
     if (!project) {
       return res.status(404).json({ error: "Project not found." });
@@ -93,7 +209,7 @@ app.get("/api/projects/:projectId", async (req, res) => {
 
 // GET ALL DECKS IN A PROJECT
 
-app.get("/api/projects/:projectId/decks", async (req, res) => {
+app.get("/api/projects/:projectId/decks", ensureAuth, async (req, res) => {
   const { projectId } = req.params;
 
   if (!ObjectId.isValid(projectId)) {
@@ -103,7 +219,7 @@ app.get("/api/projects/:projectId/decks", async (req, res) => {
   try {
     const decks = await db
       .collection("decks")
-      .find({ projectId: new ObjectId(projectId) })
+      .find({ projectId: new ObjectId(projectId), userId: req.user._id })
       .toArray();
 
     res.json(decks);
@@ -115,7 +231,7 @@ app.get("/api/projects/:projectId/decks", async (req, res) => {
 
 // DELETE PROJECT + its decks + its cards
 
-app.delete("/api/projects/:projectId", async (req, res) => {
+app.delete("/api/projects/:projectId", ensureAuth, async (req, res) => {
   const { projectId } = req.params;
 
   if (!ObjectId.isValid(projectId)) {
@@ -124,7 +240,9 @@ app.delete("/api/projects/:projectId", async (req, res) => {
 
   try {
     // Delete the project itself
-    await db.collection("projects").deleteOne({ _id: new ObjectId(projectId) });
+    await db
+      .collection("projects")
+      .deleteOne({ _id: new ObjectId(projectId), userId: req.user._id });
 
     // Delete all decks in this project
     const decks = await db
@@ -155,9 +273,12 @@ app.delete("/api/projects/:projectId", async (req, res) => {
 
 // GET ALL DECKS (GLOBAL)
 
-app.get("/api/decks", async (req, res) => {
+app.get("/api/decks", ensureAuth, async (req, res) => {
   try {
-    const decks = await db.collection("decks").find().toArray();
+    const decks = await db
+      .collection("decks")
+      .find({ userId: req.user._id })
+      .toArray();
     res.json(decks);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch decks." });
@@ -166,7 +287,7 @@ app.get("/api/decks", async (req, res) => {
 
 // CREATE NEW DECK
 
-app.post("/api/decks", async (req, res) => {
+app.post("/api/decks", ensureAuth, async (req, res) => {
   const { title, projectId } = req.body;
 
   if (!title || typeof title !== "string") {
@@ -182,6 +303,7 @@ app.post("/api/decks", async (req, res) => {
       title,
       projectId: new ObjectId(projectId),
       createdAt: new Date(),
+      userId: req.user._id,
     });
 
     res.json({
@@ -197,7 +319,7 @@ app.post("/api/decks", async (req, res) => {
 
 // GET SINGLE DECK BY ID
 
-app.get("/api/decks/:deckId", async (req, res) => {
+app.get("/api/decks/:deckId", ensureAuth, async (req, res) => {
   const { deckId } = req.params;
 
   if (!ObjectId.isValid(deckId)) {
@@ -207,7 +329,7 @@ app.get("/api/decks/:deckId", async (req, res) => {
   try {
     const deck = await db
       .collection("decks")
-      .findOne({ _id: new ObjectId(deckId) });
+      .findOne({ _id: new ObjectId(deckId), userId: req.user._id });
 
     if (!deck) {
       return res.status(404).json({ error: "Deck not found." });
@@ -221,7 +343,7 @@ app.get("/api/decks/:deckId", async (req, res) => {
 
 // UPDATE DECK (TITLE + CARDS)
 
-app.put("/api/decks/:deckId", async (req, res) => {
+app.put("/api/decks/:deckId", ensureAuth, async (req, res) => {
   const { deckId } = req.params;
   const { title, cards } = req.body;
 
@@ -240,28 +362,41 @@ app.put("/api/decks/:deckId", async (req, res) => {
   try {
     const deckObjectId = new ObjectId(deckId);
 
-    // 1) Update deck title
+    // only update if the deck belongs to this user
+    const deck = await db.collection("decks").findOne({
+      _id: deckObjectId,
+      userId: req.user._id,
+    });
+
+    if (!deck) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to edit this deck" });
+    }
+
+    // Update deck title
     await db
       .collection("decks")
       .updateOne({ _id: deckObjectId }, { $set: { title } });
 
-    // 2) Remove existing cards for this deck
+    // Remove existing cards for this deck
     await db.collection("cards").deleteMany({ deckId: deckObjectId });
 
-    // 3) Insert new cards
+    // Insert new cards
     const docsToInsert = cards
       .filter(
         (c) =>
           c.frontText &&
           c.backText &&
           c.frontText.trim() !== "" &&
-          c.backText.trim() !== ""
+          c.backText.trim() !== "",
       )
       .map((c) => ({
         deckId: deckObjectId,
         frontText: c.frontText,
         backText: c.backText,
         createdAt: new Date(),
+        userId: req.user._id,
       }));
 
     if (docsToInsert.length > 0) {
@@ -277,7 +412,7 @@ app.put("/api/decks/:deckId", async (req, res) => {
 
 // DELETE DECK
 
-app.delete("/api/decks/:deckId", async (req, res) => {
+app.delete("/api/decks/:deckId", ensureAuth, async (req, res) => {
   const { deckId } = req.params;
 
   if (!ObjectId.isValid(deckId)) {
@@ -285,7 +420,19 @@ app.delete("/api/decks/:deckId", async (req, res) => {
   }
 
   try {
-    await db.collection("decks").deleteOne({ _id: new ObjectId(deckId) });
+    const deckObjectId = new ObjectId(deckId);
+
+    // Only delete if the deck belongs to this user
+    const result = await db.collection("decks").deleteOne({
+      _id: deckObjectId,
+      userId: req.user._id,
+    });
+
+    if (result.deletedCount === 0) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this deck" });
+    }
 
     // Also delete its cards
     await db.collection("cards").deleteMany({ deckId: new ObjectId(deckId) });
@@ -298,7 +445,7 @@ app.delete("/api/decks/:deckId", async (req, res) => {
 
 // GET ALL CARDS IN A DECK
 
-app.get("/api/cards/:deckId", async (req, res) => {
+app.get("/api/cards/:deckId", ensureAuth, async (req, res) => {
   const { deckId } = req.params;
 
   if (!ObjectId.isValid(deckId)) {
@@ -308,7 +455,7 @@ app.get("/api/cards/:deckId", async (req, res) => {
   try {
     const cards = await db
       .collection("cards")
-      .find({ deckId: new ObjectId(deckId) })
+      .find({ deckId: new ObjectId(deckId), userId: req.user._id })
       .toArray();
 
     res.json(cards);
@@ -319,7 +466,7 @@ app.get("/api/cards/:deckId", async (req, res) => {
 
 // CREATE NEW CARD
 
-app.post("/api/cards", async (req, res) => {
+app.post("/api/cards", ensureAuth, async (req, res) => {
   const { deckId, frontText, backText } = req.body;
 
   if (!deckId || !frontText || !backText) {
@@ -336,6 +483,7 @@ app.post("/api/cards", async (req, res) => {
       frontText,
       backText,
       createdAt: new Date(),
+      userId: req.user._id,
     });
 
     res.json({
