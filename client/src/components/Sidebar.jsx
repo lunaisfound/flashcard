@@ -49,8 +49,8 @@ export default function Sidebar() {
     // Remove it locally
     setProjects((prev) => prev.filter((p) => p._id !== id));
 
-    // If you are inside the deleted project, go home
-    navigate("/");
+    // If you are inside the deleted project, go back to dashboard
+    navigate("/app");
   }
 
   const width = collapsed ? "60px" : "260px";

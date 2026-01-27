@@ -25,7 +25,7 @@ export default function ProjectPage() {
     }
 
     // Go back home
-    navigate("/");
+    navigate("/app");
   }
 
   // Load project + decks
