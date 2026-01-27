@@ -142,6 +142,11 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+app.post("/api/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out" });
+});
+
 // GET ALL PROJECTS
 
 app.get("/api/projects", ensureAuth, async (req, res) => {

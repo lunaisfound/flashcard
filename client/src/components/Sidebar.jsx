@@ -53,6 +53,19 @@ export default function Sidebar() {
     navigate("/app");
   }
 
+  function logout() {
+    fetch("/api/logout", {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(() => {
+        navigate("/login");
+      })
+      .catch((err) => {
+        console.error("Logout failed:", err);
+      });
+  }
+
   const width = collapsed ? "60px" : "260px";
 
   return (
@@ -163,6 +176,25 @@ export default function Sidebar() {
             )}
           </div>
         ))}
+
+      {!collapsed && (
+        <button
+          onClick={logout}
+          style={{
+            width: "100%",
+            marginTop: "20px",
+            padding: "10px",
+            background: "#ccc",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            color: "#333",
+          }}
+        >
+          Log Out
+        </button>
+      )}
     </div>
   );
 }
