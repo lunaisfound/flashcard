@@ -95,7 +95,6 @@ const formStyle = {
 };
 
 const titleStyle = {
-  fontFamily: "cursive",
   fontSize: "2rem",
   color: "#5f5df9",
   marginBottom: "25px",
