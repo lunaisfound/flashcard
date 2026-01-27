@@ -2,6 +2,8 @@ This app was created because there are too many class materials that I need to r
 
 Current progress: I’m working on making the card-creation process even smoother by adding AI.
 
+https://github.com/user-attachments/assets/521fc641-f102-451b-b396-8689c2abe688
+
 ## Tech Stack
 
 This app uses MERN stack:
