@@ -23,7 +23,7 @@ export default function LoginForm() {
       });
 
       if (!res.ok) {
-        const text = await res.text(); // fallback if not JSON
+        const text = await res.text();
         try {
           const data = JSON.parse(text);
           setError(data.error || "Login failed");
@@ -42,40 +42,100 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
+    <form onSubmit={handleSubmit} style={formStyle}>
+      <h1 style={titleStyle}>Lulu's FlashCard</h1>
 
-      <label>
-        Email:
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </label>
+      <label style={labelStyle}>Email</label>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        placeholder="Enter your email"
+        style={inputStyle}
+      />
 
-      <label>
-        Password:
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </label>
+      <label style={labelStyle}>Password</label>
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+        placeholder="Enter your password"
+        style={inputStyle}
+      />
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
 
-      <button type="submit">Log In</button>
+      <button type="submit" style={submitBtnStyle}>
+        Sign In
+      </button>
 
       <button
         type="button"
         onClick={() => navigate("/signup")}
-        style={{ marginTop: "10px" }}
+        style={switchBtnStyle}
       >
         Don't have an account? Sign Up
       </button>
     </form>
   );
 }
+
+const formStyle = {
+  backgroundColor: "#ffefd5",
+  borderRadius: "20px",
+  padding: "40px 30px",
+  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+  width: "100%",
+  maxWidth: "400px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+};
+
+const titleStyle = {
+  fontFamily: "cursive",
+  fontSize: "2rem",
+  color: "#5f5df9",
+  marginBottom: "25px",
+};
+
+const labelStyle = {
+  alignSelf: "flex-start",
+  fontWeight: "bold",
+  marginTop: "10px",
+  color: "#e67e22",
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px",
+  marginTop: "5px",
+  marginBottom: "10px",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+  fontSize: "1rem",
+};
+
+const submitBtnStyle = {
+  width: "100%",
+  backgroundColor: "#5f5df9",
+  color: "#fff",
+  fontWeight: "bold",
+  padding: "12px",
+  border: "none",
+  borderRadius: "6px",
+  marginTop: "10px",
+  cursor: "pointer",
+};
+
+const switchBtnStyle = {
+  backgroundColor: "transparent",
+  color: "#5f5df9",
+  border: "none",
+  fontSize: "0.9rem",
+  marginTop: "15px",
+  cursor: "pointer",
+  textDecoration: "underline",
+};
