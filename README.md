@@ -9,6 +9,7 @@ https://github.com/user-attachments/assets/521fc641-f102-451b-b396-8689c2abe688
 This app uses MERN stack:
 
 - React (frontend library)
+- CSS
 - Passport.js LocalStrategy (authentication)
 - MongoDB (NoSQL database)
 - Express.js (backend framework)
