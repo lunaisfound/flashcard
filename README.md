@@ -16,7 +16,7 @@ This app uses MERN stack:
 - Node.js (runtime environment).
 
 ## How to Run This App Locally
-
+Note: before running the backend, make sure to connect it to a MongoDB Atlas cluster
 ```bash
 git clone <url>
 npm install

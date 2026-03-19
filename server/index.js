@@ -4,7 +4,7 @@ const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
 
 require("dotenv").config();
-const uri = process.env.MONGO_URI;
+const uri = process.env.MONGO_URI; // replace this with your own MongoDB Atlas Connection string
 
 const express = require("express");
 const cors = require("cors");
