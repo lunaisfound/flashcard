@@ -23,3 +23,5 @@ npm install
 cd backend && npm run dev
 cd frontend && npm run dev
 ```
+
+Credit to ABSanthosh for the FlashCard Array logic.
