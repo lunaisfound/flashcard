@@ -6,8 +6,11 @@ export default function ProjectPage() {
   const navigate = useNavigate();
 
   const [project, setProject] = useState(null);
+  // Stores all decks that belong to this project
   const [decks, setDecks] = useState([]);
+  // Controlled input state for creating a new deck
   const [newDeckTitle, setNewDeckTitle] = useState("");
+  // Tracks whether project/deck data is still loading
   const [loading, setLoading] = useState(true);
 
   async function deleteProject() {
@@ -24,7 +27,7 @@ export default function ProjectPage() {
       return;
     }
 
-    // Go back home
+    // After deletion, send the user back to the dashboard
     navigate("/app");
   }
 
@@ -67,7 +70,7 @@ export default function ProjectPage() {
 
     loadProject();
     loadDecks();
-  }, [projectId]);
+  }, [projectId]); // Re-run if projectId changes
 
   // Create Deck
 
@@ -88,7 +91,7 @@ export default function ProjectPage() {
       if (!res.ok) throw new Error("Failed to create deck");
 
       const deck = await res.json();
-
+      // Add the newly created deck to the existing deck list
       setDecks((prev) => [...prev, deck]);
       setNewDeckTitle("");
     } catch (err) {

@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Stores any registration error message to show in the UI
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
+    // Clear any previous error before starting a new request
     setError("");
 
     try {

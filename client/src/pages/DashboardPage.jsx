@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function DashboardPage() {
+  // State to store list of projects fetched from backend
   const [projects, setProjects] = useState([]);
+  // State for the input field when creating a new project
   const [newTitle, setNewTitle] = useState("");
+  // Loading state to handle UI while fetching data
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Fetch all projects when component mounts
     async function loadProjects() {
       try {
         const res = await fetch("/api/projects", { credentials: "include" });
@@ -65,7 +69,7 @@ export default function DashboardPage() {
         />
         <button onClick={createProject}>+ Create Project</button>
       </div>
-
+      {/* Conditional rendering: show message if no projects exist */}
       {projects.length === 0 ? (
         <p>No projects yet. Create one to get started!</p>
       ) : (
